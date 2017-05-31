@@ -8,3 +8,5 @@ Usage:
 
 The text files will be placed in a directory called Text, under the same
 directory as the zip file
+
+Requires python 2.7.10
