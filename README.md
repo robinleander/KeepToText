@@ -9,4 +9,4 @@ Usage:
 The text files will be placed in a directory called Text, under the same
 directory as the zip file
 
-Requires python 2.7.10
+Works with Python 2 or 3
