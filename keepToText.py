@@ -1,5 +1,5 @@
 from __future__ import print_function
-import sys, glob, os, shutil, zipfile, time, codecs
+import sys, glob, os, shutil, zipfile, time, codecs, re
 
 try:
     from HTMLParser import HTMLParser
@@ -20,7 +20,7 @@ class MyHTMLParser(HTMLParser):
             elif self.nesting:
                 self.nesting += 1
         elif tag == "br" and self.nesting:
-            self.outf.write("\n")
+            self.outf.write(os.linesep)
 
     def handle_endtag(self, tag):
         if tag == self.tag and self.nesting:
@@ -92,7 +92,16 @@ def try_mkdir(dir):
     def act(): os.mkdir(dir)        
     def check(): return os.path.isdir(dir)        
     tryUntilDone(act, check)
-        
+
+htmlExt = re.compile(r"\.html$", re.I)
+
+def getHtmlDir(takeoutDir):
+    dirs = [os.path.join(takeoutDir, s) for s in os.listdir(takeoutDir)]
+    for dir in dirs:
+        if not os.path.isdir(dir): continue
+        htmlFiles = [f for f in os.listdir(dir) if htmlExt.search(f)]
+        if len(htmlFiles) > 0: return dir
+            
 def keepZipToText(zipFileName):
     zipFileDir = os.path.dirname(zipFileName)
     takeoutDir = os.path.join(zipFileDir, "Takeout")
@@ -108,9 +117,9 @@ def keepZipToText(zipFileName):
             zipFile.extractall(zipFileDir)
     except IOError as e:
         sys.exit(e)
-    translatedKeepDirs = ["Keep", "Notizen"]    
-    for dirName in translatedKeepDirs:
-        if os.path.isdir(takeoutDir+"/"+dirName): htmlDir = os.path.join(takeoutDir, dirName)
+
+    htmlDir = getHtmlDir(takeoutDir)
+    msg("Html dir: " + htmlDir)
 
     htmlDirToText(inputDir=htmlDir, outputDir=outputDir,
         tag="div", attrib="class", attribVal="content")
