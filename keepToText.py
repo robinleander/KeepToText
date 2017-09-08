@@ -1,9 +1,9 @@
 from __future__ import print_function
-import sys, glob, os, shutil, zipfile, time
+import sys, glob, os, shutil, zipfile, time, codecs
 
 try:
     from HTMLParser import HTMLParser
-except:
+except ImportError:
     from html.parser import HTMLParser
 
 from zipfile import ZipFile
@@ -45,7 +45,7 @@ def msg(s):
 def htmlFileToText(inputPath, outputDir, tag, attrib, attribVal):
     basename = os.path.basename(inputPath).replace(".html", ".txt")
     outfname = os.path.join(outputDir, basename)
-    with open(inputPath, "r") as inf, open(outfname, "w") as outf:
+    with codecs.open(inputPath, "r", "utf-8") as inf, codecs.open(outfname, "w", "utf-8") as outf:
         html = inf.read()
         parser = MyHTMLParser(outf, tag, attrib, attribVal)
         parser.feed(html)
