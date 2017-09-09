@@ -4,6 +4,7 @@ Convert a Google Takeout zip file containing Google Keep notes to a
 directory of text files, suitable for import into systems such as Evernote
 
 Use Google Takeout to get a zip file, which will contain your Keep notes
+**NOTE**: Be sure that *only* Keep files are included in the Google Takeout zip file, not contacts or any other Google data
 
 Usage:
   python keepToText.py zipfile
