@@ -105,7 +105,7 @@ def getHtmlDir(takeoutDir):
         if not os.path.isdir(dir): continue
         htmlFiles = [f for f in os.listdir(dir) if htmlExt.search(f)]
         if len(htmlFiles) > 0: return dir
-            
+
 def keepZipToText(zipFileName):
     zipFileDir = os.path.dirname(zipFileName)
     takeoutDir = os.path.join(zipFileDir, "Takeout")
@@ -119,7 +119,7 @@ def keepZipToText(zipFileName):
     try:
         with ZipFile(zipFileName) as zipFile:
             zipFile.extractall(zipFileDir)
-    except IOError as e:
+    except (IOError, zipfile.BadZipfile) as e:
         sys.exit(e)
 
     htmlDir = getHtmlDir(takeoutDir)
