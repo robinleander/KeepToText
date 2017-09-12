@@ -41,6 +41,10 @@ class MyHTMLParser(HTMLParser):
 def msg(s):
     print(s, file=sys.stderr)
     sys.stderr.flush()
+    
+def err(s):
+    msg(s)
+    sys.exit(1)
 
 def htmlFileToText(inputPath, outputDir, tag, attrib, attribVal):
     basename = os.path.basename(inputPath).replace(".html", ".txt")
@@ -119,7 +123,10 @@ def keepZipToText(zipFileName):
         sys.exit(e)
 
     htmlDir = getHtmlDir(takeoutDir)
-    msg("Html dir: " + htmlDir)
+    
+    if htmlDir is None: err("No Keep directory found")
+    
+    msg("Keep dir: " + htmlDir)
 
     htmlDirToText(inputDir=htmlDir, outputDir=outputDir,
         tag="div", attrib="class", attribVal="content")
