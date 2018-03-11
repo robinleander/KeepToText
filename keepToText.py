@@ -1,5 +1,5 @@
 from __future__ import print_function
-import sys, glob, os, shutil, zipfile, time, codecs, re
+import sys, glob, os, shutil, zipfile, time, codecs, re, argparse
 
 try:
     from HTMLParser import HTMLParser
@@ -38,6 +38,10 @@ class MyHTMLParser(HTMLParser):
         self.attribVal = attribVal
         self.nesting = 0
         
+class InvalidEncoding:
+    def __init__(self, inner):
+        self.inner = str(inner)
+        
 def msg(s):
     print(s, file=sys.stderr)
     sys.stderr.flush()
@@ -49,10 +53,15 @@ def err(s):
 def htmlFileToText(inputPath, outputDir, tag, attrib, attribVal):
     basename = os.path.basename(inputPath).replace(".html", ".txt")
     outfname = os.path.join(outputDir, basename)
-    with codecs.open(inputPath, "r", "utf-8") as inf, codecs.open(outfname, "w", "utf-8") as outf:
-        html = inf.read()
-        parser = MyHTMLParser(outf, tag, attrib, attribVal)
-        parser.feed(html)
+    try:
+        with codecs.open(inputPath, "r", "utf-8") as inf, codecs.open(outfname, "w", outputEncoding) as outf:
+            html = inf.read()
+            parser = MyHTMLParser(outf, tag, attrib, attribVal)
+            parser.feed(html)
+    except UnicodeEncodeError as ex:
+        msg("Skipping file " + inputPath + ": " + str(ex))
+    except LookupError as ex:
+        raise InvalidEncoding(ex)
         
 def htmlDirToText(inputDir, outputDir, tag, attrib, attribVal):
     try_rmtree(outputDir)
@@ -130,17 +139,33 @@ def keepZipToText(zipFileName):
 
     htmlDirToText(inputDir=htmlDir, outputDir=outputDir,
         tag="div", attrib="class", attribVal="content")
+        
+def setEncoding(args):
+    global outputEncoding
+    outputEncoding = args.encoding
+    if outputEncoding is not None: return
+    if args.system_encoding: outputEncoding = sys.stdin.encoding
+    if outputEncoding is not None: return    
+    outputEncoding = "utf-8"
 
 def main():
-    try:
-        cmd, zipFile = sys.argv
-    except ValueError:
-        sys.exit("Usage: {0} zipFile".format(sys.argv[0]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("zipFile")
+    parser.add_argument("--encoding",
+        help="character encoding of output")
+    parser.add_argument("--system-encoding", action="store_true",
+        help="use the system encoding for the output")
+    args = parser.parse_args()
     
+    setEncoding(args)
+        
+    msg("Output encoding: " + outputEncoding)
     try:
-        keepZipToText(zipFile)
-    except WindowsError as e:
-        sys.exit(e)
+        keepZipToText(args.zipFile)
+    except WindowsError as ex:
+        sys.exit(ex)
+    except InvalidEncoding as ex:
+        sys.exit(ex.inner)
 
 if __name__ == "__main__":
     main()
