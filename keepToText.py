@@ -168,6 +168,31 @@ def getHtmlDir(takeoutDir):
         if not os.path.isdir(dir): continue
         htmlFiles = [f for f in os.listdir(dir) if htmlExt.search(f)]
         if len(htmlFiles) > 0: return dir
+        
+def htmlDirToXml(zipFileDir, htmlDir):
+    xmlFile = os.path.join(zipFileDir, "cintanotes.xml")
+    notes = processHtmlFiles(inputDir=htmlDir)
+
+    cintaXml = Template("""
+        <?xml version="1.0"?>
+        <notebook version="4104" uid="">
+
+        %for note in notes:
+                <note uid="" created="${note.ctime.strftime("%Y%m%dT%H%M%S")}"
+                    source="" link="" remarks=""
+                    tags="${note.getWsSeparatedLabelString()}"
+                    section="0" plainText="1">
+                    <![CDATA[${note.text}]]>
+                </note>
+        %endfor
+
+        </notebook>
+    """)
+
+    msg("Generating CintaNotes XML file: " + xmlFile)
+
+    with codecs.open(xmlFile, 'w', 'utf-8') as outfile:
+        outfile.write(cintaXml.render(notes=notes))
 
 def keepZipToOutput(zipFileName):
     zipFileDir = os.path.dirname(zipFileName)
@@ -189,56 +214,40 @@ def keepZipToOutput(zipFileName):
     
     msg("Keep dir: " + htmlDir)
 
-    if evernote:
-        outputDir=os.path.join(zipFileDir, "Text")
-        htmlDirToText(inputDir=htmlDir, outputDir=outputDir,
+    if args.format == "Evernote":
+        htmlDirToText(inputDir=htmlDir,
+            outputDir=os.path.join(zipFileDir, "Text"),
             tag="div", attrib="class", attribVal="content")
             
-    if cinta:
-        xmlFile = os.path.join(zipFileDir, "cintanotes.xml")
-        notes = processHtmlFiles(inputDir=htmlDir)
-
-        cintaXml = Template("""
-            <?xml version="1.0"?>
-            <notebook version="4104" uid="">
-
-            %for note in notes:
-                    <note uid="" created="${note.ctime.strftime("%Y%m%dT%H%M%S")}"
-                        source="" link="" remarks=""
-                        tags="${note.getWsSeparatedLabelString()}"
-                        section="0" plainText="1">
-                        <![CDATA[${note.text}]]>
-                    </note>
-            %endfor
-
-            </notebook>
-        """)
-
-        msg("Generating CintaNotes XML file: " + xmlFile)
-
-        with codecs.open(xmlFile, 'w', 'utf-8') as outfile:
-            outfile.write(cintaXml.render(notes=notes))
+    elif args.format == "CintaNotes":
+        htmlDirToXml(zipFileDir=zipFileDir, htmlDir=htmlDir)
         
-def setEncoding(args):
+def setOutputEncoding():
     global outputEncoding
     outputEncoding = args.encoding
     if outputEncoding is not None: return
     if args.system_encoding: outputEncoding = sys.stdin.encoding
     if outputEncoding is not None: return    
     outputEncoding = "utf-8"
-
-def main():
+    
+def getArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("zipFile")
     parser.add_argument("--encoding",
         help="character encoding of output")
     parser.add_argument("--system-encoding", action="store_true",
         help="use the system encoding for the output")
+    parser.add_argument("--format", choices=["Evernote", "CintaNotes"],
+        default='Evernote', help="Output Format")
+    global args
     args = parser.parse_args()
-    
-    setEncoding(args)
+
+def main():
+    getArgs()    
+    setOutputEncoding()
         
     msg("Output encoding: " + outputEncoding)
+    
     try:
         keepZipToOutput(args.zipFile)
     except WindowsError as ex:
