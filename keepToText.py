@@ -253,8 +253,6 @@ def main():
         sys.exit(ex)
     except InvalidEncoding as ex:
         sys.exit(ex.inner)
-    except WindowsError as e:
-        sys.exit(e)
 
 if __name__ == "__main__":
     main()
