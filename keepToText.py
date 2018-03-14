@@ -107,14 +107,13 @@ def try_rmtree(dir):
     def check(): return not os.path.isdir(dir)        
     tryUntilDone(act, check)
         
-def msg(s):
-    print(s, file=sys.stderr)
-    sys.stderr.flush()
+def try_mkdir(dir):
+    def act(): os.mkdir(dir)
+    def check(): return os.path.isdir(dir)
+    tryUntilDone(act, check)
     
-def err(s):
-    msg(s)
-    sys.exit(1)
-
+htmlExt = re.compile(r"\.html$", re.I)
+    
 class Note:
     def __init__(self, heading, text, labels):
 
@@ -161,20 +160,18 @@ def processHtmlFiles(inputDir):
     msg("Done.")
 
     return notes
-    
+
 def getHtmlDir(takeoutDir):
     "Returns first subdirectory beneath takeoutDir which contains .html files"
-    htmlExt = re.compile(r"\.html$", re.I)
     dirs = [os.path.join(takeoutDir, s) for s in os.listdir(takeoutDir)]
     for dir in dirs:
         if not os.path.isdir(dir): continue
         htmlFiles = [f for f in os.listdir(dir) if htmlExt.search(f)]
         if len(htmlFiles) > 0: return dir
 
-def keepZipToXml(zipFileName):
+def keepZipToOutput(zipFileName):
     zipFileDir = os.path.dirname(zipFileName)
     takeoutDir = os.path.join(zipFileDir, "Takeout")
-    xmlFile = os.path.join(zipFileDir, "cintanotes.xml")
     
     try_rmtree(takeoutDir)
     
@@ -193,10 +190,12 @@ def keepZipToXml(zipFileName):
     msg("Keep dir: " + htmlDir)
 
     if evernote:
+        outputDir=os.path.join(zipFileDir, "Text")
         htmlDirToText(inputDir=htmlDir, outputDir=outputDir,
             tag="div", attrib="class", attribVal="content")
             
     if cinta:
+        xmlFile = os.path.join(zipFileDir, "cintanotes.xml")
         notes = processHtmlFiles(inputDir=htmlDir)
 
         cintaXml = Template("""
@@ -241,8 +240,7 @@ def main():
         
     msg("Output encoding: " + outputEncoding)
     try:
-        if evernote: keepZipToText(args.zipFile)
-        if cinta: keepZipToXml(zipFile)
+        keepZipToOutput(args.zipFile)
     except WindowsError as ex:
         sys.exit(ex)
     except InvalidEncoding as ex:
