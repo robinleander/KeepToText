@@ -1,62 +1,7 @@
 from __future__ import print_function
 import sys, glob, os, shutil, zipfile, time, codecs, re, argparse
 from zipfile import ZipFile
-
-def getArgs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("zipFile")
-    parser.add_argument("--encoding",
-        help="character encoding of output")
-    parser.add_argument("--system-encoding", action="store_true",
-        help="use the system encoding for the output")
-    parser.add_argument("--format", choices=["Evernote", "CintaNotes"],
-        default='Evernote', help="Output Format")
-    global args
-    args = parser.parse_args()
-
-getArgs()    
-
-if args.format == "Evernote":
-    try:
-        from HTMLParser import HTMLParser
-    except ImportError:
-        from html.parser import HTMLParser
-        
-    class MyHTMLParser(HTMLParser):
-        def attrib_matches(self, tag, attrs):
-            return [pair for pair in attrs if
-                    pair[0] == self.attrib and pair[1] == self.attribVal]    
-
-        def handle_starttag(self, tag, attrs):
-            if tag == self.tag:
-                if self.attrib_matches(tag, attrs) and not self.nesting:
-                    self.nesting = 1
-                elif self.nesting:
-                    self.nesting += 1
-            elif tag == "br" and self.nesting:
-                self.outf.write(os.linesep)
-
-        def handle_endtag(self, tag):
-            if tag == self.tag and self.nesting:
-                self.nesting -= 1
-                
-        def handle_data(self, data):
-            if self.nesting:
-                self.outf.write(data.strip())
-        
-        def __init__(self, outf, tag, attrib, attribVal):
-            HTMLParser.__init__(self)
-            self.outf = outf
-            self.tag = tag
-            self.attrib = attrib
-            self.attribVal = attribVal
-            self.nesting = 0
-            
-elif args.format == "CintaNotes":
-    from lxml import etree
-    from mako.template import Template
-    from dateutil.parser import parse,parserinfo
-    
+   
 class InvalidEncoding(Exception):
     def __init__(self, inner):
         Exception.__init__(self)
@@ -242,7 +187,68 @@ def setOutputEncoding():
     if outputEncoding is not None: return    
     outputEncoding = "utf-8"
 
+def getArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("zipFile")
+    parser.add_argument("--encoding",
+        help="character encoding of output")
+    parser.add_argument("--system-encoding", action="store_true",
+        help="use the system encoding for the output")
+    parser.add_argument("--format", choices=["Evernote", "CintaNotes"],
+        default='Evernote', help="Output Format")
+    global args
+    args = parser.parse_args()    
+
+def doImports():
+    if args.format == "Evernote":
+        global HTMLParser
+        try:
+            from HTMLParser import HTMLParser
+        except ImportError:
+            from html.parser import HTMLParser
+        
+        global MyHTMLParser
+        class MyHTMLParser(HTMLParser):
+            def attrib_matches(self, tag, attrs):
+                return [pair for pair in attrs if
+                        pair[0] == self.attrib and pair[1] == self.attribVal]    
+
+            def handle_starttag(self, tag, attrs):
+                if tag == self.tag:
+                    if self.attrib_matches(tag, attrs) and not self.nesting:
+                        self.nesting = 1
+                    elif self.nesting:
+                        self.nesting += 1
+                elif tag == "br" and self.nesting:
+                    self.outf.write(os.linesep)
+
+            def handle_endtag(self, tag):
+                if tag == self.tag and self.nesting:
+                    self.nesting -= 1
+                    
+            def handle_data(self, data):
+                if self.nesting:
+                    self.outf.write(data.strip())
+            
+            def __init__(self, outf, tag, attrib, attribVal):
+                HTMLParser.__init__(self)
+                self.outf = outf
+                self.tag = tag
+                self.attrib = attrib
+                self.attribVal = attribVal
+                self.nesting = 0
+                
+    elif args.format == "CintaNotes":
+        global etree
+        from lxml import etree
+        global Template
+        from mako.template import Template
+        global parse, parserinfo
+        from dateutil.parser import parse, parserinfo
+
 def main():
+    getArgs()
+    doImports()
     setOutputEncoding()
         
     msg("Output encoding: " + outputEncoding)
