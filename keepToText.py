@@ -97,7 +97,7 @@ def extractNoteFromHtmlFile(inputPath):
     tree = etree.HTML(data)
 
     heading = tree.xpath("//div[@class='heading']/text()")[0].strip()
-    text = tree.xpath("//div[@class='content']/text()")[0]
+    text = "\n".join(tree.xpath("//div[@class='content']/text()"))
     labels = tree.xpath("//div[@class='labels']/span[@class='label']/text()")
 
     return Note(heading, text, labels)
