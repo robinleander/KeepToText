@@ -31,7 +31,7 @@ Works with Python 2 or 3
   
   The default output encoding is `utf-8`
   
-  Use the `--forma`t option to choose between Evernote and CintaNotes, for example, `--format CintaNotes`
+  Use the `--format` option to choose between Evernote and CintaNotes, for example, `--format CintaNotes`
   
   The default format is Evernote
     
