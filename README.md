@@ -2,43 +2,34 @@
 
 Convert a Google Takeout zip file containing Google Keep notes to a
 directory of text files, suitable for import into systems such as Evernote
+or directly import them via the Evernote API.
 
-Use Google Takeout to get a zip file, which will contain your Keep notes
+Use Google Takeout to get a zip file, which will contain your Keep notes: https://takeout.google.com/settings/takeout
 
-**NOTE**: Be sure that *only* Keep files are included in the Google Takeout zip file, not contacts or any other Google data
+Setup:
+
+```
+virtualenv -p python2 .
+. bin/activate
+pip install -r requirements.txt
+```
 
 Usage:
 
-  simple usage: `keepToText.py zipFile`
-  
-  full usage: `keepToText.py [-h] [--encoding ENCODING] [--system-encoding]
-                     [--format {Evernote,CintaNotes}]
-                     zipFile`
+```
+./keep_convert.py [-h] [--exporter {CintaNotes,Simulate,EvernoteAPI}]
+                       [--auth-token AUTH_TOKEN] [--sandbox] [--china]
+                       [--outfile OUTFILE]
+                       TAKEOUT
+```
 
-By default, the text files will be placed in a directory called `Text`, under the same
-directory as the zip file. You may import that folder into Evernote.
+Example:
 
-If you specify `--format CintaNotes`, a single `cintanotes.xml` file containing all your notes will be
-created in the same directory as the zip file. You may import that folder into CintaNotes.
+```
+./keep_convert.py Takeout/Keep --auth-token '<<YOUR DEV TOKEN>>'
+```
 
-Works with Python 2 or 3
+You can obtain your dev token from: https://www.evernote.com/api/DeveloperToken.action
 
-**Options**:
-  
-  Use the `--encoding` option to specify an output encoding, for example, `--encoding latin_1`
-  
-  Use the `--system-encoding` option to use your operating system's current encoding
-  
-  The default output encoding is `utf-8`
-  
-  Use the `--format` option to choose between Evernote and CintaNotes, for example, `--format CintaNotes`
-  
-  The default format is Evernote
-    
-**Module dependencies**:
+If you are unable to get a dev token because the feature is disabled, contact support.
 
-   For Evernote format: HTMLParser
-   
-   For CintaNotes format: lxml, mako, and python-dateutil
-   
-   To install a dependency, use: `python -m pip install [dependency]`

@@ -154,7 +154,7 @@ class APIClient:
         # To create a new note, simply create a new Note object and fill in
         # attributes such as the note's title.
         enote = Types.Note()
-        #enote.created = int(time.mktime(note.ctime.timetuple()))
+        enote.created = int(time.mktime(note.ctime.timetuple()))
         enote.title = note.title or 'Untitled'
 
         # The content of an Evernote note is represented using Evernote Markup Language
