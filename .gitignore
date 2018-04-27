@@ -88,3 +88,16 @@ ENV/
 # Rope project settings
 .ropeproject
 /data/
+
+# IDE
+.idea/
+# Python env
+Pipfile
+Pipfile.lock
+bin/
+include/
+pip-selfcheck.json
+# Google
+Takeout
+Text
+*takeout*
